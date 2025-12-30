@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- In your HTML files -->
+<link rel="stylesheet" href="../styles/main.css">
+<link rel="stylesheet" href="../styles/responsive.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PriceTracker - Authentication</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hidden-page { display: none; }
+        .visible-page { display: block; }
+        .loading { opacity: 0.6; pointer-events: none; }
+        
+        /* Fix for text visibility */
+        input, select, textarea {
+            color: #000000 !important;
+        }
+        
+        input[type="text"], 
+        input[type="email"], 
+        input[type="password"], 
+        input[type="number"],
+        select {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+        }
+        
+        ::placeholder {
+            color: #666666 !important;
+            opacity: 0.7 !important;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-gray-100 min-h-screen flex items-center justify-center p-4">
+    
+    <div id="app" class="max-w-md w-full">
+        
+        <!-- ===== SIGN IN PAGE ===== -->
+        <div id="signin-page" class="visible-page bg-white rounded-2xl shadow-xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white">
+                <h1 class="text-3xl font-bold">Welcome Back</h1>
+                <p class="text-blue-100 mt-2">Sign in to access your personalized wishlist</p>
+            </div>
+
+            <!-- Form Content -->
+            <div class="p-8">
+                <form id="signinForm" class="space-y-6">
+                    <!-- Email -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Email Address
+                        </label>
+                        <div class="relative">
+                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <input type="email" name="email" required
+                                   class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-black"
+                                   placeholder="you@example.com">
+                        </div>
+                        <p id="signin-email-error" class="mt-1 text-sm text-red-600 hidden"></p>
+                    </div>
+
+                    <!-- Password -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-medium text-gray-700">
+                                Password
+                            </label>
+                            <button type="button" onclick="showForgotPassword()"
+                                    class="text-sm text-blue-600 hover:text-blue-800">
+                                Forgot Password?
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <input type="password" name="password" id="signinPassword" required
+                                   class="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-black"
+                                   placeholder="Enter your password">
+                            <button type="button" onclick="togglePassword('signinPassword')"
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <p id="signin-password-error" class="mt-1 text-sm text-red-600 hidden"></p>
+                    </div>
+
+                    <!-- Remember Me -->
+                    <div class="flex items-center">
+                        <input type="checkbox" id="rememberMe"
+                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="rememberMe" class="ml-2 text-sm text-gray-700">
+                            Remember me
+                        </label>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="signinSubmit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition">
+                        Sign In
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                <div class="mt-8">
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-300"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-4 bg-white text-gray-500">Or continue with</span>
+                        </div>
+                    </div>
+
+                    <!-- Alternative Options -->
+                    <div class="mt-6 space-y-4">
+                        <button onclick="accessAsGuest()"
+                                class="w-full bg-white border-2 border-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-50 transition">
+                            <div class="flex items-center justify-center">
+                                <i class="fas fa-user mr-2"></i> Continue as Guest
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Browse without saving preferences</p>
+                        </button>
+
+                        <div class="text-center">
+                            <p class="text-gray-600">
+                                Don't have an account? 
+                                <button onclick="showSignUp()" class="text-blue-600 hover:text-blue-800 font-medium">
+                                    Sign Up
+                                </button>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SIGN UP PAGE ===== -->
+        <div id="signup-page" class="hidden-page bg-white rounded-2xl shadow-xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white">
+                <h1 class="text-3xl font-bold">Create Account</h1>
+                <p class="text-blue-100 mt-2">Join PriceTracker for personalized shopping experience</p>
+            </div>
+
+            <!-- Form Content -->
+            <div class="p-8">
+                <form id="signupForm" class="space-y-6">
+                    <!-- Username -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Username *
+                        </label>
+                        <div class="relative">
+                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <input type="text" name="username" required
+                                   class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-black"
+                                   placeholder="Enter your username">
+                        </div>
+                        <p id="username-error" class="mt-1 text-sm text-red-600 hidden"></p>
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Email Address *
+                        </label>
+                        <div class="relative">
+                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <input type="email" name="email" required
+                                   class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-black"
+                                   placeholder="you@example.com">
+                        </div>
+                        <p id="email-error" class="mt-1 text-sm text-red-600 hidden"></p>
+                    </div>
+
+                    <!-- Pincode -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Pincode (Optional)
+                            <span class="text-gray-500 text-sm ml-1">- For location-based pricing</span>
+                        </label>
+                        <div class="relative">
+                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <input type="text" name="pincode" maxlength="6"
+                                   class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-black"
+                                   placeholder="123456">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">
+                            Providing pincode helps show accurate prices and shipping costs
+                        </p>
+                    </div>
+
+                    <!-- Password -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Password *
+                        </label>
+                        <div class="relative">
+                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <input type="password" name="password" id="password" required
+                                   class="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-black"
+                                   placeholder="Create a strong password">
+                            <button type="button" onclick="togglePassword('password')"
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Password Strength -->
+                        <div class="password-strength mt-2">
+                            <div class="flex gap-2 mb-1">
+                                <div id="strength-1" class="h-1 flex-1 bg-gray-300 rounded-full"></div>
+                                <div id="strength-2" class="h-1 flex-1 bg-gray-300 rounded-full"></div>
+                                <div id="strength-3" class="h-1 flex-1 bg-gray-300 rounded-full"></div>
+                                <div id="strength-4" class="h-1 flex-1 bg-gray-300 rounded-full"></div>
+                            </div>
+                            <div class="text-xs text-gray-500 space-y-1">
+                                <div class="flex items-center">
+                                    <div id="req-length" class="w-2 h-2 rounded-full bg-gray-300 mr-2"></div>
+                                    At least 8 characters
+                                </div>
+                                <div class="flex items-center">
+                                    <div id="req-lower" class="w-2 h-2 rounded-full bg-gray-300 mr-2"></div>
+                                    Contains lowercase letter
+                                </div>
+                                <div class="flex items-center">
+                                    <div id="req-upper" class="w-2 h-2 rounded-full bg-gray-300 mr-2"></div>
+                                    Contains uppercase letter
+                                </div>
+                                <div class="flex items-center">
+                                    <div id="req-number" class="w-2 h-2 rounded-full bg-gray-300 mr-2"></div>
+                                    Contains number
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Confirm Password *
+                        </label>
+                        <div class="relative">
+                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <input type="password" name="confirmPassword" id="confirmPassword" required
+                                   class="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-black"
+                                   placeholder="Re-enter your password">
+                            <button type="button" onclick="togglePassword('confirmPassword')"
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <p id="confirm-error" class="mt-1 text-sm text-red-600 hidden"></p>
+                    </div>
+
+                    <!-- Terms -->
+                    <div class="flex items-center">
+                        <input type="checkbox" id="terms" required
+                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="terms" class="ml-2 block text-sm text-gray-700">
+                            I agree to the <a href="#" class="text-blue-600 hover:text-blue-800 font-medium">Terms</a> and
+                            <a href="#" class="text-blue-600 hover:text-blue-800 font-medium">Privacy Policy</a>
+                        </label>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="signupSubmit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition">
+                        Create Account
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                <div class="mt-8">
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-300"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-4 bg-white text-gray-500">Or continue with</span>
+                        </div>
+                    </div>
+
+                    <!-- Guest Access -->
+                    <div class="mt-6 space-y-4">
+                        <button onclick="accessAsGuest()"
+                                class="w-full bg-white border-2 border-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-50 transition">
+                            <div class="flex items-center justify-center">
+                                <i class="fas fa-user mr-2"></i> Continue as Guest
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Browse without saving preferences</p>
+                        </button>
+
+                        <div class="text-center">
+                            <p class="text-gray-600">
+                                Already have an account? 
+                                <button onclick="showSignIn()" class="text-blue-600 hover:text-blue-800 font-medium">
+                                    Sign In
+                                </button>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== FORGOT PASSWORD PAGE ===== -->
+        <div id="forgot-page" class="hidden-page bg-white rounded-2xl shadow-xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white">
+                <h1 class="text-2xl font-bold">Reset Password</h1>
+                <p class="text-blue-100 mt-2">Enter your email to receive a reset link</p>
+            </div>
+            
+            <div class="p-8">
+                <form id="forgotForm" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Email Address
+                        </label>
+                        <div class="relative">
+                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <input type="email" name="forgotEmail" id="forgotEmail" required
+                                   class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-black"
+                                   placeholder="you@example.com">
+                        </div>
+                        <p id="forgot-error" class="mt-1 text-sm text-red-600 hidden"></p>
+                    </div>
+
+                    <button type="submit" id="forgotSubmit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition">
+                        Send Reset Link
+                    </button>
+
+                    <div class="text-center">
+                        <button type="button" onclick="showSignIn()"
+                                class="text-blue-600 hover:text-blue-800 font-medium flex items-center justify-center mx-auto">
+                            <i class="fas fa-arrow-left mr-2"></i> Back to Sign In
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ===== RESET PASSWORD PAGE ===== -->
+        <div id="reset-page" class="hidden-page bg-white rounded-2xl shadow-xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white">
+                <h1 class="text-2xl font-bold">Create New Password</h1>
+                <p class="text-blue-100 mt-2">Choose a strong, secure password</p>
+            </div>
+            
+            <div class="p-8">
+                <form id="resetForm" class="space-y-6">
+                    <!-- New Password -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            New Password
+                        </label>
+                        <div class="relative">
+                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <input type="password" name="newPassword" id="newPassword" required
+                                   class="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-black"
+                                   placeholder="Enter new password">
+                            <button type="button" onclick="togglePassword('newPassword')"
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-500 space-y-1">
+                            <div class="flex items-center">
+                                <div id="reset-req-length" class="w-2 h-2 rounded-full bg-gray-300 mr-2"></div>
+                                At least 8 characters
+                            </div>
+                            <div class="flex items-center">
+                                <div id="reset-req-lower" class="w-2 h-2 rounded-full bg-gray-300 mr-2"></div>
+                                Contains lowercase letter
+                            </div>
+                            <div class="flex items-center">
+                                <div id="reset-req-upper" class="w-2 h-2 rounded-full bg-gray-300 mr-2"></div>
+                                Contains uppercase letter
+                            </div>
+                            <div class="flex items-center">
+                                <div id="reset-req-number" class="w-2 h-2 rounded-full bg-gray-300 mr-2"></div>
+                                Contains number
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Confirm New Password
+                        </label>
+                        <div class="relative">
+                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <input type="password" name="resetConfirmPassword" id="resetConfirmPassword" required
+                                   class="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-black"
+                                   placeholder="Confirm new password">
+                            <button type="button" onclick="togglePassword('resetConfirmPassword')"
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <p id="reset-confirm-error" class="mt-1 text-sm text-red-600 hidden"></p>
+                    </div>
+
+                    <button type="submit" id="resetSubmit" class="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold py-3 px-4 rounded-lg hover:from-green-600 hover:to-emerald-600 transition">
+                        Reset Password
+                    </button>
+
+                    <div class="text-center">
+                        <button type="button" onclick="showSignIn()"
+                                class="text-blue-600 hover:text-blue-800 font-medium">
+                            <i class="fas fa-arrow-left mr-2"></i> Back to Sign In
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ===== SUCCESS MODALS ===== -->
+        <!-- Reset Email Sent Modal -->
+        <div id="reset-sent-modal" class="hidden-page bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="bg-gradient-to-r from-green-500 to-emerald-500 p-8 text-white">
+                <h1 class="text-2xl font-bold">Check Your Email</h1>
+            </div>
+            <div class="p-8 text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-envelope text-2xl text-green-600"></i>
+                </div>
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                    Reset Link Sent
+                </h2>
+                <p class="text-gray-600 mb-6" id="reset-email-display">
+                    We've sent a password reset link.
+                </p>
+                <div class="space-y-4">
+                    <button onclick="showSignIn()"
+                            class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition">
+                        Back to Sign In
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Password Reset Success Modal -->
+        <div id="reset-success-modal" class="hidden-page bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="bg-gradient-to-r from-green-500 to-emerald-500 p-8 text-white">
+                <h1 class="text-2xl font-bold">Password Updated!</h1>
+            </div>
+            <div class="p-8 text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-check text-2xl text-green-600"></i>
+                </div>
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                    Successfully Changed
+                </h2>
+                <p class="text-gray-600 mb-6">
+                    Your password has been successfully reset. You can now sign in with your new password.
+                </p>
+                <button onclick="showSignIn()"
+                        class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition">
+                    Go to Sign In
+                </button>
+            </div>
+        </div>
+
+        <!-- Success Modal for Sign Up -->
+        <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+            <div class="bg-white rounded-2xl p-8 max-w-sm w-full text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-check text-2xl text-green-600"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4" id="modal-title">Success!</h2>
+                <p class="text-gray-600 mb-6" id="modal-message">Operation completed successfully.</p>
+                <button onclick="closeModal()"
+                        class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition">
+                    Continue
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ===== BACKEND CONFIGURATION =====
+        const API_BASE_URL = 'http://localhost:5000/api';
+        
+        // ===== LOADING STATES =====
+        function setLoading(buttonId, isLoading) {
+            const button = document.getElementById(buttonId);
+            if (!button) return;
+            
+            if (isLoading) {
+                button.classList.add('loading');
+                button.innerHTML = '<span class="flex items-center justify-center"><svg class="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing...</span>';
+                button.disabled = true;
+            } else {
+                button.classList.remove('loading');
+                if (buttonId === 'signinSubmit') {
+                    button.textContent = 'Sign In';
+                } else if (buttonId === 'signupSubmit') {
+                    button.textContent = 'Create Account';
+                } else if (buttonId === 'forgotSubmit') {
+                    button.textContent = 'Send Reset Link';
+                } else if (buttonId === 'resetSubmit') {
+                    button.textContent = 'Reset Password';
+                }
+                button.disabled = false;
+            }
+        }
+
+        // ===== API CALL FUNCTIONS =====
+        async function makeApiRequest(endpoint, method = 'POST', data = null) {
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+                
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+                
+                if (response.status === 401) {
+                    // Handle token refresh if needed
+                    return { ok: false, status: 401, data: { error: 'Session expired' } };
+                }
+                
+                const responseData = await response.json().catch(() => ({}));
+                
+                return {
+                    ok: response.ok,
+                    status: response.status,
+                    data: responseData
+                };
+            } catch (error) {
+                console.error('API Request Error:', error);
+                return {
+                    ok: false,
+                    error: 'Network error. Please check your connection.'
+                };
+            }
+        }
+
+        // ===== FORM HANDLERS =====
+        
+        // Sign Up Handler
+        document.getElementById('signupForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                username: this.username.value.trim(),
+                email: this.email.value.trim().toLowerCase(),
+                password: this.password.value,
+                pincode: this.pincode.value.trim() || null
+            };
+            
+            // Basic validation
+            const confirmPassword = this.confirmPassword.value;
+            if (formData.password !== confirmPassword) {
+                showError('confirm-error', 'Passwords do not match');
+                return;
+            }
+            
+            if (formData.password.length < 8) {
+                showError('confirm-error', 'Password must be at least 8 characters');
+                return;
+            }
+            
+            // Clear errors
+            hideError('confirm-error');
+            hideError('username-error');
+            hideError('email-error');
+            
+            setLoading('signupSubmit', true);
+            
+            const result = await makeApiRequest('/register', 'POST', formData);
+            
+            setLoading('signupSubmit', false);
+            
+            if (result.ok) {
+                // Store tokens and user data
+                localStorage.setItem('access_token', result.data.access_token);
+                localStorage.setItem('refresh_token', result.data.refresh_token);
+                localStorage.setItem('user', JSON.stringify(result.data.user));
+                localStorage.setItem('is_guest', 'false');
+                
+                // Show success message
+                showModal('Account Created!', 'Your account has been successfully created. Redirecting to dashboard...');
+                
+                // Redirect to dashboard after 2 seconds
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 2000);
+            } else {
+                if (result.data?.error?.includes('Email')) {
+                    showError('email-error', result.data.error);
+                } else if (result.data?.error?.includes('Username')) {
+                    showError('username-error', result.data.error);
+                } else {
+                    showError('email-error', result.data?.error || 'Registration failed. Please try again.');
+                }
+            }
+        });
+
+        // Sign In Handler
+        document.getElementById('signinForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                email: this.email.value.trim().toLowerCase(),
+                password: this.password.value
+            };
+            
+            // Clear previous errors
+            hideError('signin-email-error');
+            hideError('signin-password-error');
+            
+            setLoading('signinSubmit', true);
+            
+            const result = await makeApiRequest('/login', 'POST', formData);
+            
+            setLoading('signinSubmit', false);
+            
+            if (result.ok) {
+                // Store tokens and user data
+                localStorage.setItem('access_token', result.data.access_token);
+                localStorage.setItem('refresh_token', result.data.refresh_token);
+                localStorage.setItem('user', JSON.stringify(result.data.user));
+                localStorage.setItem('is_guest', 'false');
+                
+                // Show success message
+                showModal('Login Successful!', 'Redirecting to dashboard...');
+                
+                // Redirect to dashboard after 1 second
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+            } else {
+                showError('signin-password-error', result.data?.error || 'Login failed. Please check your credentials.');
+            }
+        });
+
+        // Forgot Password Handler
+        document.getElementById('forgotForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = this.forgotEmail.value.trim().toLowerCase();
+            
+            if (!email) {
+                showError('forgot-error', 'Please enter your email address');
+                return;
+            }
+            
+            setLoading('forgotSubmit', true);
+            
+            const result = await makeApiRequest('/forgot-password', 'POST', { email });
+            
+            setLoading('forgotSubmit', false);
+            
+            if (result.ok) {
+                document.getElementById('reset-email-display').textContent = 
+                    `We've sent a password reset link to ${email}. Please check your inbox.`;
+                showResetSent();
+            } else {
+                showError('forgot-error', result.data?.error || 'Failed to send reset link');
+            }
+        });
+
+        // Reset Password Handler
+        document.getElementById('resetForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const newPassword = this.newPassword.value;
+            const confirmPassword = this.resetConfirmPassword.value;
+            const token = new URLSearchParams(window.location.search).get('token');
+            
+            if (!token) {
+                showError('reset-confirm-error', 'Reset token is missing');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                showError('reset-confirm-error', 'Passwords do not match');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                showError('reset-confirm-error', 'Password must be at least 8 characters');
+                return;
+            }
+            
+            setLoading('resetSubmit', true);
+            
+            // Note: This endpoint would need to be implemented differently
+            // since it requires token in URL or body
+            const result = await makeApiRequest('/reset-password', 'POST', {
+                token: token,
+                new_password: newPassword
+            });
+            
+            setLoading('resetSubmit', false);
+            
+            if (result.ok) {
+                showResetSuccess();
+            } else {
+                showError('reset-confirm-error', result.data?.error || 'Password reset failed');
+            }
+        });
+
+        // Guest Access Handler
+        async function accessAsGuest() {
+            const confirmed = confirm('Continue as guest? You can:\n• Browse products\n• Compare prices\n• Use search features\n\nBut you cannot:\n• Save wishlists\n• Get price alerts\n• Save preferences\n\nProceed as guest?');
+            
+            if (!confirmed) return;
+            
+            const result = await makeApiRequest('/guest-access', 'POST');
+            
+            if (result.ok) {
+                localStorage.setItem('access_token', result.data.access_token);
+                localStorage.setItem('user', JSON.stringify(result.data.user));
+                localStorage.setItem('is_guest', 'true');
+                
+                showModal('Guest Access Granted', 'Redirecting to main page...');
+                
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+            } else {
+                alert('Failed to access as guest. Please try again.');
+            }
+        }
+
+        // ===== HELPER FUNCTIONS =====
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = message;
+                element.classList.remove('hidden');
+            }
+        }
+
+        function hideError(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.classList.add('hidden');
+            }
+        }
+
+        function showModal(title, message) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            document.getElementById('success-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('success-modal').classList.add('hidden');
+        }
+
+        // ===== PASSWORD STRENGTH CHECKER =====
+        document.getElementById('password')?.addEventListener('input', function(e) {
+            const password = e.target.value;
+            
+            // Update requirements
+            document.getElementById('req-length').style.backgroundColor = password.length >= 8 ? '#10B981' : '#D1D5DB';
+            document.getElementById('req-lower').style.backgroundColor = /[a-z]/.test(password) ? '#10B981' : '#D1D5DB';
+            document.getElementById('req-upper').style.backgroundColor = /[A-Z]/.test(password) ? '#10B981' : '#D1D5DB';
+            document.getElementById('req-number').style.backgroundColor = /\d/.test(password) ? '#10B981' : '#D1D5DB';
+            
+            // Update strength bars
+            let strength = 0;
+            if (password.length >= 8) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/\d/.test(password)) strength++;
+            
+            for (let i = 1; i <= 4; i++) {
+                const bar = document.getElementById(`strength-${i}`);
+                if (i <= strength) {
+                    const colors = ['#EF4444', '#F59E0B', '#10B981', '#10B981'];
+                    bar.style.backgroundColor = colors[strength - 1];
+                } else {
+                    bar.style.backgroundColor = '#D1D5DB';
+                }
+            }
+        });
+
+        // Reset password strength checker
+        document.getElementById('newPassword')?.addEventListener('input', function(e) {
+            const password = e.target.value;
+            
+            // Update requirements
+            document.getElementById('reset-req-length').style.backgroundColor = password.length >= 8 ? '#10B981' : '#D1D5DB';
+            document.getElementById('reset-req-lower').style.backgroundColor = /[a-z]/.test(password) ? '#10B981' : '#D1D5DB';
+            document.getElementById('reset-req-upper').style.backgroundColor = /[A-Z]/.test(password) ? '#10B981' : '#D1D5DB';
+            document.getElementById('reset-req-number').style.backgroundColor = /\d/.test(password) ? '#10B981' : '#D1D5DB';
+        });
+
+        // ===== PAGE NAVIGATION FUNCTIONS =====
+        let currentPage = 'signin';
+
+        function showPage(pageId) {
+            document.querySelectorAll('[id$="-page"]').forEach(page => {
+                page.classList.remove('visible-page');
+                page.classList.add('hidden-page');
+            });
+            
+            const targetPage = document.getElementById(`${pageId}-page`);
+            if (targetPage) {
+                targetPage.classList.remove('hidden-page');
+                targetPage.classList.add('visible-page');
+                currentPage = pageId;
+            }
+        }
+
+        function showSignIn() {
+            showPage('signin');
+        }
+
+        function showSignUp() {
+            showPage('signup');
+        }
+
+        function showForgotPassword() {
+            showPage('forgot');
+        }
+
+        function showResetPassword() {
+            showPage('reset');
+        }
+
+        function showResetSent() {
+            showPage('reset-sent');
+        }
+
+        function showResetSuccess() {
+            showPage('reset-success');
+        }
+
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.type = input.type === 'password' ? 'text' : 'password';
+                const icon = input.nextElementSibling.querySelector('i');
+                if (icon) {
+                    icon.classList.toggle('fa-eye');
+                    icon.classList.toggle('fa-eye-slash');
+                }
+            }
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for reset token in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const resetToken = urlParams.get('token');
+            
+            if (resetToken) {
+                showResetPassword();
+            } else {
+                // Check if already logged in
+                const user = localStorage.getItem('user');
+                const token = localStorage.getItem('access_token');
+                
+                if (user && token) {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    showPage('signin');
+                }
+            }
+            
+            // Close modal on outside click
+            document.getElementById('success-modal').addEventListener('click', function(e) {
+                if (e.target === this) closeModal();
+            });
+            
+            // Add enter key support
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const form = this.closest('form');
+                        if (form) {
+                            const submitBtn = form.querySelector('button[type="submit"]');
+                            if (submitBtn) {
+                                submitBtn.click();
+                            }
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

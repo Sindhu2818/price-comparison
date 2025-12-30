@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wishlist - PriceTracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Your CSS files -->
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hidden { display: none; }
+        .loading { opacity: 0.6; pointer-events: none; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;line-clamp: 3; overflow: hidden; }
+        
+        /* Fix for text visibility */
+        input, select, textarea {
+            color: #000000 !important;
+        }
+        
+        input[type="text"], 
+        input[type="email"], 
+        input[type="password"], 
+        input[type="number"],
+        select {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+        }
+        
+        ::placeholder {
+            color: #666666 !important;
+            opacity: 0.7 !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="dashboard.html" class="text-2xl font-bold text-blue-600 flex items-center">
+                        <i class="fas fa-chart-line mr-2"></i>PriceTracker
+                    </a>
+                    <div class="ml-10 flex space-x-4">
+                        <a href="dashboard.html" class="text-gray-700 hover:text-blue-600 font-medium flex items-center">
+                            <i class="fas fa-home mr-1"></i> Dashboard
+                        </a>
+                        <a href="product_search.html" class="text-gray-700 hover:text-blue-600 font-medium flex items-center">
+                            <i class="fas fa-search mr-1"></i> Search
+                        </a>
+                        <a href="wishlist.html" class="text-blue-600 font-medium flex items-center border-b-2 border-blue-600 pb-1">
+                            <i class="fas fa-heart mr-1"></i> Wishlist
+                        </a>
+                        <a href="profile.html" class="text-gray-700 hover:text-blue-600 font-medium flex items-center">
+                            <i class="fas fa-user mr-1"></i> Profile
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative group">
+                        <button id="user-menu-btn" class="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg">
+                            <div id="user-avatar" class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                                U
+                            </div>
+                            <span id="user-greeting" class="text-gray-700 font-medium">Loading...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50 hidden">
+        <div class="text-center">
+            <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+            <p class="mt-4 text-gray-600">Loading wishlist...</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">My Wishlist</h1>
+                <p class="text-gray-600">Track products and get notified when prices drop</p>
+            </div>
+            <div class="mt-4 md:mt-0 flex space-x-3">
+                <button onclick="createNewWishlist()" 
+                        class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition font-semibold">
+                    <i class="fas fa-plus mr-2"></i> New Wishlist
+                </button>
+                <button onclick="checkAllAlerts()" 
+                        class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-semibold">
+                    <i class="fas fa-bell mr-2"></i> Check Alerts
+                </button>
+            </div>
+        </div>
+
+        <!-- Guest Message -->
+        <div id="guest-message" class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6 hidden">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-700">
+                        <strong>Guest users cannot save wishlists.</strong> 
+                        <a href="auth.html" class="font-medium underline text-yellow-700 hover:text-yellow-600">Sign in</a> 
+                        or <a href="auth.html" class="font-medium underline text-yellow-700 hover:text-yellow-600">create an account</a> 
+                        to save products and get price alerts.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wishlists Section -->
+        <div id="wishlists-section" class="mb-12">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Your Wishlists</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="wishlists-container">
+                <!-- Wishlists will be loaded here -->
+            </div>
+            
+            <!-- Empty State -->
+            <div id="empty-wishlists" class="text-center py-16">
+                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-heart text-gray-400 text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-700 mb-2">No wishlists yet</h3>
+                <p class="text-gray-500 mb-6">Create your first wishlist to start tracking products</p>
+                <button onclick="createNewWishlist()" 
+                        class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition">
+                    <i class="fas fa-plus mr-2"></i> Create Wishlist
+                </button>
+            </div>
+        </div>
+
+        <!-- Wishlist Items Section -->
+        <div id="wishlist-items-section" class="hidden">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800" id="selected-wishlist-name"></h2>
+                    <p class="text-gray-600" id="selected-wishlist-count"></p>
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="backToWishlists()" 
+                            class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition">
+                        <i class="fas fa-arrow-left mr-2"></i> Back
+                    </button>
+                    <button onclick="editWishlist()" 
+                            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-edit mr-2"></i> Edit
+                    </button>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-8">
+                <div class="p-6">
+                    <!-- Price Alert Summary -->
+                    <div id="price-alert-summary" class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg hidden">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="font-bold text-gray-800">Price Drop Alerts</h3>
+                                <p class="text-gray-600" id="alert-count-text">0 products have reached your target price</p>
+                            </div>
+                            <button onclick="viewAlerts()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                                View Alerts
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Items List -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Product</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Current Price</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Target Price</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Status</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="wishlist-items-container">
+                                <!-- Items will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Empty Items State -->
+                    <div id="empty-items" class="text-center py-12">
+                        <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-box-open text-gray-400 text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-700 mb-2">No products in this wishlist</h3>
+                        <p class="text-gray-500 mb-6">Add products to start tracking prices</p>
+                        <a href="product_search.html" 
+                           class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+                            <i class="fas fa-search mr-2"></i> Search Products
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Wishlist Modal -->
+        <div id="create-wishlist-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+            <div class="bg-white rounded-2xl p-8 max-w-md w-full">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Create New Wishlist</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Wishlist Name</label>
+                        <input type="text" 
+                               id="new-wishlist-name" 
+                               placeholder="e.g., Electronics, Birthday Gifts, etc."
+                               class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black">
+                    </div>
+                    
+                    <div class="flex space-x-3">
+                        <button onclick="closeCreateModal()" 
+                                class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 transition">
+                            Cancel
+                        </button>
+                        <button onclick="saveNewWishlist()" 
+                                class="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition">
+                            Create
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Wishlist Modal -->
+        <div id="edit-wishlist-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+            <div class="bg-white rounded-2xl p-8 max-w-md w-full">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Edit Wishlist</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Wishlist Name</label>
+                        <input type="text" 
+                               id="edit-wishlist-name" 
+                               class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black">
+                    </div>
+                    
+                    <div class="flex space-x-3">
+                        <button onclick="deleteWishlist()" 
+                                class="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition">
+                            <i class="fas fa-trash mr-2"></i> Delete
+                        </button>
+                        <button onclick="closeEditModal()" 
+                                class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 transition">
+                            Cancel
+                        </button>
+                        <button onclick="saveEditWishlist()" 
+                                class="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition">
+                            Save
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; 2024 PriceTracker. All rights reserved.</p>
+            <p class="mt-2 text-gray-400">Track prices across Amazon, Flipkart, Myntra, and more.</p>
+        </div>
+    </footer>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-check text-green-600 text-2xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center" id="modal-title">Success!</h2>
+            <p class="text-gray-600 mb-6 text-center" id="modal-message">Operation completed successfully.</p>
+            <button onclick="closeModal()"
+                    class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition">
+                Continue
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:5000/api';
+        let currentUser = null;
+        let currentWishlistId = null;
+        let wishlists = [];
+
+        // Utility Functions
+        function showLoading(show) {
+            const overlay = document.getElementById('loading-overlay');
+            overlay.style.display = show ? 'flex' : 'none';
+        }
+
+        function showModal(title, message) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            document.getElementById('success-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('success-modal').classList.add('hidden');
+        }
+
+        // Authentication Functions
+        function checkAuth() {
+            const user = localStorage.getItem('user');
+            const token = localStorage.getItem('access_token');
+            const isGuest = localStorage.getItem('is_guest') === 'true';
+            
+            if (!user || !token) {
+                window.location.href = 'auth.html';
+                return false;
+            }
+            
+            if (isGuest) {
+                document.getElementById('guest-message').classList.remove('hidden');
+                document.getElementById('wishlists-section').classList.add('hidden');
+                document.getElementById('wishlist-items-section').classList.add('hidden');
+                return false;
+            }
+            
+            return true;
+        }
+
+        async function makeApiRequest(endpoint, method = 'GET', data = null, requiresAuth = true) {
+            try {
+                if (requiresAuth && !checkAuth()) {
+                    return { ok: false, error: 'Authentication required' };
+                }
+
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+
+                if (requiresAuth) {
+                    const token = localStorage.getItem('access_token');
+                    if (token) {
+                        options.headers['Authorization'] = `Bearer ${token}`;
+                    }
+                }
+
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+                
+                if (response.status === 401 && requiresAuth) {
+                    // Token expired
+                    alert('Session expired. Please login again.');
+                    window.location.href = 'auth.html';
+                    return { ok: false, error: 'Session expired' };
+                }
+
+                const responseData = await response.json().catch(() => ({}));
+                
+                return {
+                    ok: response.ok,
+                    status: response.status,
+                    data: responseData
+                };
+            } catch (error) {
+                console.error('API Error:', error);
+                return {
+                    ok: false,
+                    error: 'Network error. Please check your connection.'
+                };
+            }
+        }
+
+        // Wishlist Functions
+        async function loadWishlists() {
+            if (!checkAuth()) return;
+            
+            showLoading(true);
+            
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                
+                // For new users, show empty wishlists
+                wishlists = [];
+                
+                displayWishlists(wishlists);
+                showLoading(false);
+                
+            } catch (error) {
+                console.error('Error loading wishlists:', error);
+                showLoading(false);
+            }
+        }
+
+        function displayWishlists(wishlists) {
+            const container = document.getElementById('wishlists-container');
+            const emptyState = document.getElementById('empty-wishlists');
+            
+            if (wishlists.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            container.innerHTML = wishlists.map(wishlist => `
+                <div class="bg-white rounded-2xl card-shadow p-6 hover:shadow-xl transition cursor-pointer"
+                     onclick="viewWishlist(${wishlist.id}, '${wishlist.name.replace(/'/g, "\\'")}')">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-heart text-blue-600 text-xl"></i>
+                        </div>
+                        <span class="bg-gray-100 text-gray-800 text-xs font-medium px-3 py-1 rounded-full">
+                            ${wishlist.item_count || 0} items
+                        </span>
+                    </div>
+                    
+                    <h3 class="font-bold text-gray-800 mb-2">${wishlist.name}</h3>
+                    <p class="text-gray-600 text-sm mb-4">Click to view products</p>
+                    
+                    <div class="flex space-x-2">
+                        <button onclick="event.stopPropagation(); editWishlist(${wishlist.id}, '${wishlist.name.replace(/'/g, "\\'")}')" 
+                                class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition text-sm">
+                            <i class="fas fa-edit mr-1"></i> Edit
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function createNewWishlist() {
+            if (!checkAuth()) return;
+            
+            document.getElementById('new-wishlist-name').value = '';
+            document.getElementById('create-wishlist-modal').classList.remove('hidden');
+        }
+
+        function closeCreateModal() {
+            document.getElementById('create-wishlist-modal').classList.add('hidden');
+        }
+
+        async function saveNewWishlist() {
+            const name = document.getElementById('new-wishlist-name').value.trim();
+            
+            if (!name) {
+                alert('Please enter a wishlist name');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                // For demo purposes - simulate API call
+                setTimeout(() => {
+                    // Add new wishlist to array
+                    const newWishlist = {
+                        id: wishlists.length + 1,
+                        name: name,
+                        item_count: 0
+                    };
+                    wishlists.push(newWishlist);
+                    
+                    closeCreateModal();
+                    displayWishlists(wishlists);
+                    showLoading(false);
+                    
+                    showModal('Wishlist Created', 'Your new wishlist has been created successfully!');
+                }, 1000);
+                
+            } catch (error) {
+                alert('Error creating wishlist. Please try again.');
+                showLoading(false);
+            }
+        }
+
+        function editWishlist(wishlistId = currentWishlistId, wishlistName = '') {
+            if (!checkAuth()) return;
+            
+            if (wishlistId) {
+                currentWishlistId = wishlistId;
+                document.getElementById('edit-wishlist-name').value = wishlistName;
+                document.getElementById('edit-wishlist-modal').classList.remove('hidden');
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-wishlist-modal').classList.add('hidden');
+            currentWishlistId = null;
+        }
+
+        async function saveEditWishlist() {
+            const name = document.getElementById('edit-wishlist-name').value.trim();
+            
+            if (!name) {
+                alert('Please enter a wishlist name');
+                return;
+            }
+            
+            if (!currentWishlistId) return;
+            
+            showLoading(true);
+            
+            try {
+                // For demo purposes - simulate API call
+                setTimeout(() => {
+                    // Update wishlist in array
+                    const wishlistIndex = wishlists.findIndex(w => w.id === currentWishlistId);
+                    if (wishlistIndex !== -1) {
+                        wishlists[wishlistIndex].name = name;
+                    }
+                    
+                    closeEditModal();
+                    displayWishlists(wishlists);
+                    
+                    // Update current view if open
+                    if (!document.getElementById('wishlist-items-section').classList.contains('hidden')) {
+                        document.getElementById('selected-wishlist-name').textContent = name;
+                    }
+                    
+                    showLoading(false);
+                    showModal('Wishlist Updated', 'Your wishlist has been updated successfully!');
+                }, 1000);
+                
+            } catch (error) {
+                alert('Error updating wishlist. Please try again.');
+                showLoading(false);
+            }
+        }
+
+        async function deleteWishlist() {
+            if (!currentWishlistId || !confirm('Are you sure you want to delete this wishlist? All items will be removed.')) {
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                // For demo purposes - simulate API call
+                setTimeout(() => {
+                    // Remove wishlist from array
+                    wishlists = wishlists.filter(w => w.id !== currentWishlistId);
+                    
+                    closeEditModal();
+                    displayWishlists(wishlists);
+                    
+                    // If we were viewing this wishlist, go back to list
+                    if (!document.getElementById('wishlist-items-section').classList.contains('hidden')) {
+                        backToWishlists();
+                    }
+                    
+                    showLoading(false);
+                    showModal('Wishlist Deleted', 'Your wishlist has been deleted successfully!');
+                }, 1000);
+                
+            } catch (error) {
+                alert('Error deleting wishlist. Please try again.');
+                showLoading(false);
+            }
+        }
+
+        function viewWishlist(wishlistId, wishlistName) {
+            if (!checkAuth()) return;
+            
+            currentWishlistId = wishlistId;
+            
+            // Update UI
+            document.getElementById('selected-wishlist-name').textContent = wishlistName;
+            document.getElementById('wishlists-section').classList.add('hidden');
+            document.getElementById('wishlist-items-section').classList.remove('hidden');
+            
+            // Load wishlist items
+            loadWishlistItems(wishlistId);
+        }
+
+        async function loadWishlistItems(wishlistId) {
+            showLoading(true);
+            
+            try {
+                // For new users, show empty wishlist
+                let items = [];
+                
+                displayWishlistItems(items);
+                
+                // Update count
+                document.getElementById('selected-wishlist-count').textContent = 
+                    `${items.length} ${items.length === 1 ? 'item' : 'items'}`;
+                
+                // Check for price alerts
+                checkPriceAlerts(items);
+                
+                showLoading(false);
+                
+            } catch (error) {
+                console.error('Error loading wishlist items:', error);
+                showLoading(false);
+            }
+        }
+
+        function displayWishlistItems(items) {
+            const container = document.getElementById('wishlist-items-container');
+            const emptyState = document.getElementById('empty-items');
+            
+            if (items.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                document.getElementById('price-alert-summary').classList.add('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            container.innerHTML = items.map(item => {
+                const product = item.product || {};
+                const currentPrice = product.current_price || 'N/A';
+                const targetPrice = item.target_price || 'Not set';
+                const status = getPriceStatus(currentPrice, targetPrice);
+                
+                return `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="py-4 px-4">
+                            <div class="flex items-center">
+                                <img src="${product.image_url || 'https://via.placeholder.com/40'}" 
+                                     alt="${product.name}" 
+                                     class="w-10 h-10 object-cover rounded mr-3">
+                                <div>
+                                    <p class="font-medium text-gray-800 line-clamp-2">${product.name || 'Unknown Product'}</p>
+                                    <p class="text-sm text-gray-500">${product.website || ''}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-4">
+                            <span class="font-bold ${status === 'below' ? 'text-green-600' : 'text-gray-800'}">
+                                ₹${currentPrice}
+                            </span>
+                        </td>
+                        <td class="py-4 px-4">
+                            <span class="font-medium text-gray-800">${targetPrice === 'Not set' ? 'Not set' : `₹${targetPrice}`}</span>
+                        </td>
+                        <td class="py-4 px-4">
+                            <span class="px-3 py-1 rounded-full text-xs font-medium ${getStatusClass(status)}">
+                                ${getStatusText(status)}
+                            </span>
+                        </td>
+                        <td class="py-4 px-4">
+                            <div class="flex space-x-2">
+                                <button onclick="updateTargetPrice(${item.id}, ${item.target_price || 'null'})" 
+                                        class="text-blue-600 hover:text-blue-800">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="removeFromWishlist(${item.id})" 
+                                        class="text-red-600 hover:text-red-800">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                <a href="${product.product_url || '#'}" target="_blank" 
+                                   class="text-green-600 hover:text-green-800">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function getPriceStatus(currentPrice, targetPrice) {
+            if (targetPrice === 'Not set' || currentPrice === 'N/A') return 'tracking';
+            if (parseFloat(currentPrice) <= parseFloat(targetPrice)) return 'below';
+            return 'above';
+        }
+
+        function getStatusClass(status) {
+            switch(status) {
+                case 'below': return 'bg-green-100 text-green-800';
+                case 'above': return 'bg-red-100 text-red-800';
+                default: return 'bg-blue-100 text-blue-800';
+            }
+        }
+
+        function getStatusText(status) {
+            switch(status) {
+                case 'below': return 'Price Drop!';
+                case 'above': return 'Above Target';
+                default: return 'Tracking';
+            }
+        }
+
+        function checkPriceAlerts(items) {
+            const alertItems = items.filter(item => {
+                const currentPrice = item.product?.current_price;
+                const targetPrice = item.target_price;
+                
+                return currentPrice && targetPrice && parseFloat(currentPrice) <= parseFloat(targetPrice);
+            });
+            
+            if (alertItems.length > 0) {
+                document.getElementById('price-alert-summary').classList.remove('hidden');
+                document.getElementById('alert-count-text').textContent = 
+                    `${alertItems.length} ${alertItems.length === 1 ? 'product has' : 'products have'} reached your target price!`;
+            } else {
+                document.getElementById('price-alert-summary').classList.add('hidden');
+            }
+        }
+
+        function backToWishlists() {
+            document.getElementById('wishlists-section').classList.remove('hidden');
+            document.getElementById('wishlist-items-section').classList.add('hidden');
+            currentWishlistId = null;
+        }
+
+        function updateTargetPrice(itemId, currentTarget) {
+            const newTarget = prompt('Enter new target price:', currentTarget || '');
+            
+            if (newTarget === null) return; // User cancelled
+            
+            if (newTarget && isNaN(newTarget)) {
+                alert('Please enter a valid number');
+                return;
+            }
+            
+            // For demo - show confirmation
+            showModal('Target Price Updated', `Target price updated to ₹${newTarget || 'Not set'}`);
+        }
+
+        function removeFromWishlist(itemId) {
+            if (!confirm('Remove this product from wishlist?')) return;
+            
+            // For demo - show confirmation
+            showModal('Item Removed', 'Product has been removed from your wishlist.');
+        }
+
+        function checkAllAlerts() {
+            if (!checkAuth()) return;
+            
+            // Check if any wishlist has price alerts
+            let totalAlerts = 0;
+            wishlists.forEach(wishlist => {
+                // For new users, no alerts
+            });
+            
+            if (totalAlerts > 0) {
+                showModal('Price Alerts Found', `You have ${totalAlerts} price drop alert${totalAlerts > 1 ? 's' : ''}! Check your wishlists.`);
+            } else {
+                showModal('No Alerts', 'No price alerts at the moment.');
+            }
+        }
+
+        function viewAlerts() {
+            // Navigate to the first wishlist with alerts for demo
+            const wishlistWithAlerts = wishlists.find(w => w.item_count > 0);
+            if (wishlistWithAlerts) {
+                viewWishlist(wishlistWithAlerts.id, wishlistWithAlerts.name);
+            }
+        }
+
+        // Initialize
+        function initializeWishlistPage() {
+            const user = localStorage.getItem('user');
+            const isGuest = localStorage.getItem('is_guest') === 'true';
+            
+            if (user) {
+                currentUser = JSON.parse(user);
+                document.getElementById('user-greeting').textContent = currentUser.username || 'User';
+                
+                if (currentUser.username) {
+                    document.getElementById('user-avatar').textContent = currentUser.username.charAt(0).toUpperCase();
+                }
+                
+                if (!isGuest) {
+                    loadWishlists();
+                }
+            } else {
+                window.location.href = 'auth.html';
+            }
+            
+            // Check URL for new wishlist parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('new') === 'true') {
+                createNewWishlist();
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if we're on wishlist page
+            if (window.location.pathname.includes('wishlist.html') || 
+                window.location.pathname.endsWith('wishlist.html')) {
+                initializeWishlistPage();
+            }
+        });
+    </script>
+</body>
+</html>

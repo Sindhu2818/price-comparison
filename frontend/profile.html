@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- In your HTML files -->
+<link rel="stylesheet" href="../styles/main.css">
+<link rel="stylesheet" href="../styles/responsive.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - PriceTracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hidden { display: none; }
+        .loading { opacity: 0.6; pointer-events: none; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        
+        /* Fix for text visibility */
+        input, select, textarea {
+            color: #000000 !important;
+        }
+        
+        input[type="text"], 
+        input[type="email"], 
+        input[type="password"], 
+        input[type="number"],
+        select {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+        }
+        
+        ::placeholder {
+            color: #666666 !important;
+            opacity: 0.7 !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="dashboard.html" class="text-2xl font-bold text-blue-600 flex items-center">
+                        <i class="fas fa-chart-line mr-2"></i>PriceTracker
+                    </a>
+                    <div class="ml-10 flex space-x-4">
+                        <a href="dashboard.html" class="text-gray-700 hover:text-blue-600 font-medium flex items-center">
+                            <i class="fas fa-home mr-1"></i> Dashboard
+                        </a>
+                        <a href="product_search.html" class="text-gray-700 hover:text-blue-600 font-medium flex items-center">
+                            <i class="fas fa-search mr-1"></i> Search
+                        </a>
+                        <a href="wishlist.html" class="text-gray-700 hover:text-blue-600 font-medium flex items-center">
+                            <i class="fas fa-heart mr-1"></i> Wishlist
+                        </a>
+                        <a href="profile.html" class="text-blue-600 font-medium flex items-center border-b-2 border-blue-600 pb-1">
+                            <i class="fas fa-user mr-1"></i> Profile
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="logout()" class="text-gray-700 hover:text-blue-600 font-medium">
+                        <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                    </button>
+                    <div class="relative group">
+                        <button id="user-menu-btn" class="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg">
+                            <div id="user-avatar" class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                                U
+                            </div>
+                            <span id="user-greeting" class="text-gray-700 font-medium">Loading...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50 hidden">
+        <div class="text-center">
+            <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+            <p class="mt-4 text-gray-600">Loading profile...</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column - Profile Info -->
+            <div class="lg:col-span-2">
+                <!-- Profile Header -->
+                <div class="bg-white rounded-2xl card-shadow p-6 mb-8">
+                    <div class="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-6">
+                        <div class="relative">
+                            <div class="w-32 h-32 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-full flex items-center justify-center text-white text-4xl font-bold">
+                                <span id="profile-avatar">U</span>
+                            </div>
+                            <button onclick="changeAvatar()" 
+                                    class="absolute bottom-0 right-0 bg-white border-2 border-gray-200 w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-50">
+                                <i class="fas fa-camera text-gray-600"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="flex-grow text-center md:text-left">
+                            <h1 class="text-3xl font-bold text-gray-800 mb-2" id="profile-username">Loading...</h1>
+                            <p class="text-gray-600 mb-4" id="profile-email">Loading...</p>
+                            <div class="flex flex-wrap gap-2">
+                                <span id="user-type-badge" class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                                    Loading...
+                                </span>
+                                <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
+                                    Member since <span id="member-since">Loading...</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Settings -->
+                <div class="bg-white rounded-2xl card-shadow p-6 mb-8">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Profile Settings</h2>
+                    
+                    <form id="profile-form" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                                <input type="text" 
+                                       id="username-input"
+                                       class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                                <input type="email" 
+                                       id="email-input"
+                                       class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Pincode
+                                    <span class="text-gray-500 text-sm ml-1">(for location-based pricing)</span>
+                                </label>
+                                <input type="text" 
+                                       id="pincode-input"
+                                       maxlength="6"
+                                       class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Preferred Currency</label>
+                                <select id="currency-input" class="w-full border border-gray-300 rounded-lg p-3 text-black">
+                                    <option value="INR">Indian Rupee (₹)</option>
+                                    <option value="USD">US Dollar ($)</option>
+                                    <option value="EUR">Euro (€)</option>
+                                    <option value="GBP">British Pound (£)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Notification Preferences</label>
+                            <div class="space-y-3">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="email-alerts" class="h-4 w-4 text-blue-600">
+                                    <label for="email-alerts" class="ml-2 text-gray-700">Email notifications for price drops</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="weekly-digest" class="h-4 w-4 text-blue-600" checked>
+                                    <label for="weekly-digest" class="ml-2 text-gray-700">Weekly price digest email</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="product-suggestions" class="h-4 w-4 text-blue-600" checked>
+                                    <label for="product-suggestions" class="ml-2 text-gray-700">Product suggestions based on interests</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="pt-6 border-t">
+                            <button type="button" onclick="updateProfile()" 
+                                    class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition font-semibold">
+                                <i class="fas fa-save mr-2"></i> Save Changes
+                            </button>
+                            <button type="button" onclick="resetForm()" 
+                                    class="ml-3 bg-gray-200 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-300 transition">
+                                Reset
+                            </button>
+                            <button type="button" onclick="deleteAccount()" 
+                                    class="ml-3 bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 transition">
+                                <i class="fas fa-trash mr-2"></i> Delete Account
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Change Password -->
+                <div class="bg-white rounded-2xl card-shadow p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Change Password</h2>
+                    
+                    <form id="password-form" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                            <div class="relative">
+                                <input type="password" 
+                                       id="current-password"
+                                       class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black">
+                                <button type="button" onclick="togglePassword('current-password')"
+                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                            <div class="relative">
+                                <input type="password" 
+                                       id="new-password"
+                                       class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black">
+                                <button type="button" onclick="togglePassword('new-password')"
+                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Password must be at least 8 characters long</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                            <div class="relative">
+                                <input type="password" 
+                                       id="confirm-password"
+                                       class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black">
+                                <button type="button" onclick="togglePassword('confirm-password')"
+                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="pt-6 border-t">
+                            <button type="button" onclick="changePassword()" 
+                                    class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition font-semibold">
+                                <i class="fas fa-key mr-2"></i> Change Password
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column - Stats & Actions -->
+            <div class="space-y-8">
+                <!-- Account Stats -->
+                <div class="bg-white rounded-2xl card-shadow p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Account Stats</h2>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-600">Products Tracked</span>
+                                <span class="text-2xl font-bold text-blue-600" id="stats-tracked">0</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-600">Wishlists</span>
+                                <span class="text-2xl font-bold text-green-600" id="stats-wishlists">0</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-600 h-2 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-600">Price Alerts</span>
+                                <span class="text-2xl font-bold text-red-600" id="stats-alerts">0</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-red-600 h-2 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-600">Total Saved</span>
+                                <span class="text-2xl font-bold text-purple-600" id="stats-saved">₹0</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-purple-600 h-2 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-2xl card-shadow p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Quick Actions</h2>
+                    
+                    <div class="space-y-3">
+                        <button onclick="exportData()" 
+                                class="w-full bg-gray-50 hover:bg-gray-100 p-4 rounded-lg text-left flex items-center justify-between transition">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fas fa-download text-blue-600"></i>
+                                </div>
+                                <span class="font-medium">Export Data</span>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </button>
+                        
+                        <button onclick="deleteAccount()" 
+                                class="w-full bg-gray-50 hover:bg-gray-100 p-4 rounded-lg text-left flex items-center justify-between transition">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fas fa-trash text-red-600"></i>
+                                </div>
+                                <span class="font-medium">Delete Account</span>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </button>
+                        
+                        <button onclick="logout()" 
+                                class="w-full bg-gray-50 hover:bg-gray-100 p-4 rounded-lg text-left flex items-center justify-between transition">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fas fa-sign-out-alt text-gray-600"></i>
+                                </div>
+                                <span class="font-medium">Logout</span>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Account Type -->
+                <div class="bg-white rounded-2xl card-shadow p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Account Type</h2>
+                    
+                    <div class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
+                        <div class="flex items-center mb-3">
+                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                <i class="fas fa-crown text-blue-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800" id="account-type-name">Free Account</h3>
+                                <p class="text-sm text-gray-600">Basic features included</p>
+                            </div>
+                        </div>
+                        
+                        <ul class="space-y-2 text-sm text-gray-600 mb-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Track up to 50 products
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                3 wishlists
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Basic price alerts
+                            </li>
+                        </ul>
+                        
+                        <button onclick="upgradeAccount()" 
+                                class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition">
+                            Upgrade to Premium
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; 2024 PriceTracker. All rights reserved.</p>
+            <p class="mt-2 text-gray-400">Track prices across Amazon, Flipkart, Myntra, and more.</p>
+        </div>
+    </footer>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-check text-green-600 text-2xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center" id="modal-title">Success!</h2>
+            <p class="text-gray-600 mb-6 text-center" id="modal-message">Operation completed successfully.</p>
+            <button onclick="closeModal()"
+                    class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition">
+                Continue
+            </button>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full">
+            <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-exclamation-triangle text-yellow-600 text-2xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center" id="confirm-title">Confirm Action</h2>
+            <p class="text-gray-600 mb-6 text-center" id="confirm-message">Are you sure you want to proceed?</p>
+            <div class="flex space-x-3">
+                <button onclick="closeConfirmModal()" 
+                        class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 transition">
+                    Cancel
+                </button>
+                <button onclick="confirmAction()" 
+                        class="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:5000/api';
+        let currentUser = null;
+        let pendingAction = null;
+
+        // Utility Functions
+        function showLoading(show) {
+            const overlay = document.getElementById('loading-overlay');
+            overlay.style.display = show ? 'flex' : 'none';
+        }
+
+        function showModal(title, message) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            document.getElementById('success-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('success-modal').classList.add('hidden');
+        }
+
+        function showConfirm(title, message, action) {
+            pendingAction = action;
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-message').textContent = message;
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            pendingAction = null;
+        }
+
+        function confirmAction() {
+            if (pendingAction && typeof pendingAction === 'function') {
+                pendingAction();
+            }
+            closeConfirmModal();
+        }
+
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // Authentication Functions
+        function checkAuth() {
+            const user = localStorage.getItem('user');
+            const token = localStorage.getItem('access_token');
+            
+            if (!user || !token) {
+                window.location.href = 'auth.html';
+                return false;
+            }
+            return true;
+        }
+
+        async function makeApiRequest(endpoint, method = 'GET', data = null, requiresAuth = true) {
+            try {
+                if (requiresAuth && !checkAuth()) {
+                    return { ok: false, error: 'Authentication required' };
+                }
+
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+
+                if (requiresAuth) {
+                    const token = localStorage.getItem('access_token');
+                    if (token) {
+                        options.headers['Authorization'] = `Bearer ${token}`;
+                    }
+                }
+
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+                
+                if (response.status === 401 && requiresAuth) {
+                    // Token expired
+                    alert('Session expired. Please login again.');
+                    window.location.href = 'auth.html';
+                    return { ok: false, error: 'Session expired' };
+                }
+
+                const responseData = await response.json().catch(() => ({}));
+                
+                return {
+                    ok: response.ok,
+                    status: response.status,
+                    data: responseData
+                };
+            } catch (error) {
+                console.error('API Error:', error);
+                return {
+                    ok: false,
+                    error: 'Network error. Please check your connection.'
+                };
+            }
+        }
+
+        // Profile Functions
+        function initializeProfilePage() {
+            if (!checkAuth()) return;
+            
+            const user = localStorage.getItem('user');
+            const isGuest = localStorage.getItem('is_guest') === 'true';
+            
+            if (user) {
+                currentUser = JSON.parse(user);
+                
+                // Update UI
+                document.getElementById('user-greeting').textContent = currentUser.username || 'User';
+                document.getElementById('profile-username').textContent = currentUser.username || 'User';
+                document.getElementById('profile-email').textContent = currentUser.email || '';
+                document.getElementById('profile-avatar').textContent = currentUser.username ? currentUser.username.charAt(0).toUpperCase() : 'U';
+                document.getElementById('user-avatar').textContent = currentUser.username ? currentUser.username.charAt(0).toUpperCase() : 'U';
+                
+                // Set user type
+                const userTypeBadge = document.getElementById('user-type-badge');
+                if (isGuest) {
+                    userTypeBadge.textContent = 'Guest User';
+                    userTypeBadge.className = 'bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium';
+                    document.getElementById('account-type-name').textContent = 'Guest Account';
+                    
+                    // Disable features for guests
+                    document.querySelectorAll('[data-requires-auth]').forEach(el => {
+                        el.disabled = true;
+                        el.classList.add('opacity-50', 'cursor-not-allowed');
+                    });
+                    
+                    // Disable save button for guests
+                    const saveBtn = document.querySelector('button[onclick="updateProfile()"]');
+                    if (saveBtn) {
+                        saveBtn.disabled = true;
+                        saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
+                } else {
+                    userTypeBadge.textContent = 'Registered User';
+                    userTypeBadge.className = 'bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium';
+                    document.getElementById('account-type-name').textContent = 'Free Account';
+                }
+                
+                // Set member since
+                if (currentUser.created_at) {
+                    const date = new Date(currentUser.created_at);
+                    document.getElementById('member-since').textContent = date.toLocaleDateString('en-US', {
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                } else {
+                    document.getElementById('member-since').textContent = 'Today';
+                }
+                
+                // Load profile data
+                loadProfileData();
+                loadAccountStats();
+            }
+        }
+
+        function loadProfileData() {
+            // Set form values
+            document.getElementById('username-input').value = currentUser.username || '';
+            document.getElementById('email-input').value = currentUser.email || '';
+            document.getElementById('pincode-input').value = currentUser.pincode || '';
+            
+            // Load saved preferences
+            const preferences = JSON.parse(localStorage.getItem('preferences') || '{}');
+            document.getElementById('currency-input').value = preferences.currency || 'INR';
+            document.getElementById('email-alerts').checked = preferences.emailAlerts !== false;
+            document.getElementById('weekly-digest').checked = preferences.weeklyDigest !== false;
+            document.getElementById('product-suggestions').checked = preferences.productSuggestions !== false;
+        }
+
+        async function loadAccountStats() {
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                const isGuest = localStorage.getItem('is_guest') === 'true';
+                
+                if (isGuest) {
+                    document.getElementById('stats-tracked').textContent = '0';
+                    document.getElementById('stats-wishlists').textContent = '0';
+                    document.getElementById('stats-alerts').textContent = '0';
+                    document.getElementById('stats-saved').textContent = '₹0';
+                    return;
+                }
+                
+                // For new users, show all zeros
+                document.getElementById('stats-tracked').textContent = '0';
+                document.getElementById('stats-wishlists').textContent = '0';
+                document.getElementById('stats-alerts').textContent = '0';
+                document.getElementById('stats-saved').textContent = '₹0';
+                
+            } catch (error) {
+                console.error('Error loading account stats:', error);
+            }
+        }
+
+        function resetForm() {
+            loadProfileData();
+            document.getElementById('current-password').value = '';
+            document.getElementById('new-password').value = '';
+            document.getElementById('confirm-password').value = '';
+        }
+
+        async function updateProfile() {
+            const isGuest = localStorage.getItem('is_guest') === 'true';
+            if (isGuest) {
+                alert('Guest users cannot update profile. Please create an account.');
+                return;
+            }
+            
+            const username = document.getElementById('username-input').value.trim();
+            const email = document.getElementById('email-input').value.trim();
+            const pincode = document.getElementById('pincode-input').value.trim();
+            
+            if (!username || !email) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                // For demo purposes - simulate API call
+                setTimeout(() => {
+                    showLoading(false);
+                    
+                    // Update local storage
+                    currentUser.username = username;
+                    currentUser.email = email;
+                    currentUser.pincode = pincode;
+                    localStorage.setItem('user', JSON.stringify(currentUser));
+                    
+                    // Update UI
+                    document.getElementById('user-greeting').textContent = username;
+                    document.getElementById('profile-username').textContent = username;
+                    document.getElementById('profile-email').textContent = email;
+                    document.getElementById('profile-avatar').textContent = username.charAt(0).toUpperCase();
+                    document.getElementById('user-avatar').textContent = username.charAt(0).toUpperCase();
+                    
+                    // Save preferences
+                    const preferences = {
+                        currency: document.getElementById('currency-input').value,
+                        emailAlerts: document.getElementById('email-alerts').checked,
+                        weeklyDigest: document.getElementById('weekly-digest').checked,
+                        productSuggestions: document.getElementById('product-suggestions').checked
+                    };
+                    localStorage.setItem('preferences', JSON.stringify(preferences));
+                    
+                    showModal('Profile Updated', 'Your profile has been updated successfully!');
+                }, 1000);
+                
+            } catch (error) {
+                showLoading(false);
+                alert('Error updating profile. Please try again.');
+            }
+        }
+
+        async function changePassword() {
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                alert('Please fill in all password fields');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                alert('New password must be at least 8 characters long');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                alert('New passwords do not match');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                // For demo purposes - simulate API call
+                setTimeout(() => {
+                    showLoading(false);
+                    
+                    // Clear password fields
+                    document.getElementById('current-password').value = '';
+                    document.getElementById('new-password').value = '';
+                    document.getElementById('confirm-password').value = '';
+                    
+                    showModal('Password Changed', 'Your password has been changed successfully!');
+                }, 1000);
+                
+            } catch (error) {
+                showLoading(false);
+                alert('Error changing password. Please try again.');
+            }
+        }
+
+        function changeAvatar() {
+            alert('Avatar change feature coming soon!');
+        }
+
+        function exportData() {
+            showConfirm('Export Data', 'This will export all your wishlists and tracked products as a CSV file. Continue?', () => {
+                showLoading(true);
+                setTimeout(() => {
+                    showLoading(false);
+                    showModal('Export Started', 'Your data export has been initiated. You will receive an email with the download link.');
+                }, 1500);
+            });
+        }
+
+        function deleteAccount() {
+            const isGuest = localStorage.getItem('is_guest') === 'true';
+            
+            if (isGuest) {
+                showConfirm('Delete Guest Account', 'Your guest account and all associated data will be permanently deleted. This action cannot be undone. Continue?', () => {
+                    localStorage.clear();
+                    window.location.href = 'auth.html';
+                });
+            } else {
+                showConfirm('Delete Account', 'Your account and all associated data will be permanently deleted. This action cannot be undone. Continue?', () => {
+                    showLoading(true);
+                    setTimeout(() => {
+                        showLoading(false);
+                        showModal('Account Deleted', 'Your account has been deleted successfully.');
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.href = 'auth.html';
+                        }, 2000);
+                    }, 2000);
+                });
+            }
+        }
+
+        function upgradeAccount() {
+            alert('Premium features coming soon!');
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.clear();
+                window.location.href = 'auth.html';
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if we're on profile page
+            if (window.location.pathname.includes('profile.html') || 
+                window.location.pathname.endsWith('profile.html')) {
+                initializeProfilePage();
+            }
+        });
+    </script>
+</body>
+</html>

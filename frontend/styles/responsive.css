@@ -1,0 +1,256 @@
+/* Responsive CSS for PriceTracker */
+
+/* Mobile First Approach */
+
+/* Extra small devices (phones, less than 576px) */
+@media (max-width: 575.98px) {
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    /* Navigation */
+    nav .flex {
+        flex-direction: column;
+        height: auto;
+        padding: 0.5rem 0;
+    }
+    
+    nav .ml-10 {
+        margin-left: 0;
+        margin-top: 0.5rem;
+    }
+    
+    nav .space-x-4 {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    /* Typography */
+    h1 {
+        font-size: 1.5rem !important;
+    }
+    
+    h2 {
+        font-size: 1.25rem !important;
+    }
+    
+    h3 {
+        font-size: 1.125rem !important;
+    }
+    
+    /* Cards */
+    .card-shadow {
+        padding: 1rem !important;
+    }
+    
+    /* Grids */
+    .grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    /* Forms */
+    input, select, textarea {
+        font-size: 16px !important; /* Prevents zoom on iOS */
+    }
+    
+    /* Search bar */
+    #search-input {
+        padding-left: 2.5rem !important;
+        padding-right: 5rem !important;
+    }
+    
+    #search-button {
+        padding: 0.5rem 1rem !important;
+        font-size: 0.875rem !important;
+    }
+    
+    /* Modals */
+    .modal-content {
+        width: 95% !important;
+        margin: 0.5rem !important;
+        padding: 1rem !important;
+    }
+}
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+    .container {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+    
+    /* Grid adjustments */
+    .grid-cols-2,
+    .grid-cols-3,
+    .grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    /* Navigation */
+    nav .ml-10 {
+        margin-left: 1rem;
+    }
+    
+    /* Cards */
+    .card-shadow {
+        padding: 1.25rem !important;
+    }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .container {
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+    
+    /* Grid adjustments */
+    .lg\:grid-cols-3 {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    /* Navigation menu */
+    .group-hover\:block {
+        position: fixed !important;
+        top: 4rem;
+        left: 1rem;
+        right: 1rem;
+        width: auto !important;
+    }
+    
+    /* Stats cards */
+    .md\:grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+    .container {
+        max-width: 960px;
+    }
+    
+    /* Grid adjustments */
+    .lg\:grid-cols-3 {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+/* Extra large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+    .container {
+        max-width: 1140px;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    /* Ensure text remains visible in dark mode */
+    input, select, textarea {
+        color: #ffffff !important;
+        background-color: #1f2937 !important;
+        border-color: #4b5563 !important;
+    }
+    
+    input[type="text"], 
+    input[type="email"], 
+    input[type="password"], 
+    input[type="number"],
+    select {
+        color: #ffffff !important;
+        background-color: #1f2937 !important;
+    }
+    
+    ::placeholder {
+        color: #9ca3af !important;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    input:focus,
+    select:focus,
+    textarea:focus {
+        outline: 3px solid #000000;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    /* Larger touch targets */
+    button,
+    a,
+    input[type="button"],
+    input[type="submit"] {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Better spacing for touch */
+    .space-y-3 > * + * {
+        margin-top: 0.75rem;
+    }
+    
+    .space-y-4 > * + * {
+        margin-top: 1rem;
+    }
+    
+    /* Remove hover effects on touch devices */
+    .hover\:bg-gray-100:hover,
+    .hover\:bg-blue-100:hover,
+    .hover\:text-blue-600:hover {
+        background-color: inherit;
+        color: inherit;
+    }
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    body {
+        font-size: 12pt;
+        line-height: 1.4;
+    }
+    
+    .container {
+        width: 100% !important;
+        max-width: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .card-shadow {
+        box-shadow: none !important;
+        border: 1px solid #000 !important;
+    }
+}
+
+/* Orientation specific */
+@media (orientation: portrait) {
+    .portrait\:flex-col {
+        flex-direction: column !important;
+    }
+}
+
+@media (orientation: landscape) {
+    .landscape\:flex-row {
+        flex-direction: row !important;
+    }
+}
