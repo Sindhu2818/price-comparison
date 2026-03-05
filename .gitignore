@@ -1,0 +1,29 @@
+# Virtual environments
+
+.venv/
+venv/
+
+# Python cache
+
+**pycache**/
+
+# Flask instance folder
+
+instance/
+
+# Database files
+
+*.db
+
+# Logs
+
+*.log
+
+# VS Code settings
+
+.vscode/
+
+# OS junk
+
+.DS_Store
+Thumbs.db
