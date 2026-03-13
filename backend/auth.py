@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 from models import User, db
-from datetime import datetime
+from datetime import datetime, timedelta
 import uuid
 
 auth_bp = Blueprint('auth', __name__)
@@ -90,10 +90,9 @@ def guest_access():
         db.session.commit()
         
         # Generate tokens with shorter expiry for guests
-        from flask_jwt_extended import create_access_token, create_refresh_token
         access_token = create_access_token(
             identity=str(guest_user.id),
-            expires_delta=False  # Shorter expiry for guests
+            expires_delta=timedelta(hours=24)
         )
         
         return jsonify({
@@ -124,7 +123,7 @@ def forgot_password():
         # Generate reset token (simplified - use proper token generation in production)
         reset_token = create_access_token(
             identity=str(user.id),
-            expires_delta=3600  # 1 hour
+            expires_delta=timedelta(hours=1)
         )
         # Send email with reset link (implement email service)
         return jsonify({
@@ -158,6 +157,11 @@ def reset_password():
 def get_all_users():
     """Admin endpoint to view all registered users"""
     try:
+        current_user_id = int(get_jwt_identity())
+        current_user = User.query.get(current_user_id)
+        if not current_user or current_user.email != 'admin@example.com':
+            return jsonify({'error': 'Admin access required'}), 403
+
         users = User.query.all()
         users_data = [{
             'id': user.id,
@@ -178,6 +182,12 @@ def get_all_users():
 def delete_user(user_id):
     """Delete a specific user account"""
     try:
+        current_user_id = int(get_jwt_identity())
+        current_user = User.query.get(current_user_id)
+        # Allow admin OR the user deleting their own account
+        if not current_user or (current_user.email != 'admin@example.com' and current_user_id != user_id):
+            return jsonify({'error': 'Access denied'}), 403
+
         user = User.query.get(user_id)
         if not user:
             return jsonify({'error': 'User not found'}), 404

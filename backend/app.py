@@ -17,25 +17,13 @@ logger = logging.getLogger(__name__)
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from database import db
-from auth import auth_bp  # FIXED: Changed "auth bp" to "auth_bp"
+from auth import auth_bp
 from scraper import PriceScraper, get_scraper
 from models import User, Product, Wishlist, WishlistItem, PriceHistory
 
 # Initialize scraper globally
 scraper = get_scraper()
 logger.info("✅ PriceScraper initialized successfully")
-
-# Add current directory to path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-from database import db
-from auth import auth_bp
-from scraper import PriceScraper, get_scraper
-from models import User, Product, Wishlist, WishlistItem, PriceHistory
-
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 def create_app():
     """Create and configure the Flask application"""
@@ -294,7 +282,7 @@ def create_app():
     def track_product():
         """Add a product to wishlist for tracking"""
         try:
-            current_user_id = get_jwt_identity()
+            current_user_id = int(get_jwt_identity())
             data = request.get_json()
             
             # Validate input
@@ -407,7 +395,7 @@ def create_app():
     def get_wishlists():
         """Get all wishlists for current user"""
         try:
-            current_user_id = get_jwt_identity()
+            current_user_id = int(get_jwt_identity())
             
             wishlists = Wishlist.query.filter_by(user_id=current_user_id).all()
             
@@ -446,7 +434,7 @@ def create_app():
     def create_wishlist():
         """Create a new wishlist"""
         try:
-            current_user_id = get_jwt_identity()
+            current_user_id = int(get_jwt_identity())
             data = request.get_json()
             
             name = data.get('name', '').strip()
@@ -488,109 +476,13 @@ def create_app():
             db.session.rollback()
             return jsonify({'error': str(e)}), 500
 
-    # Update Wishlist
-    @app.route('/api/wishlists/<int:wishlist_id>', methods=['PUT'])
-    @jwt_required()
-    def update_wishlist(wishlist_id):
-        """Rename a wishlist"""
-        try:
-            current_user_id = get_jwt_identity()
-            data = request.get_json()
-            name = (data.get('name') or '').strip()
-
-            if not name:
-                return jsonify({'error': 'Wishlist name is required'}), 400
-
-            wishlist = Wishlist.query.filter_by(id=wishlist_id, user_id=current_user_id).first()
-            if not wishlist:
-                return jsonify({'error': 'Wishlist not found'}), 404
-
-            wishlist.name = name
-            db.session.commit()
-
-            return jsonify({'success': True, 'message': 'Wishlist updated', 'wishlist': {'id': wishlist.id, 'name': wishlist.name}})
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'error': str(e)}), 500
-
-    # Delete Wishlist
-    @app.route('/api/wishlists/<int:wishlist_id>', methods=['DELETE'])
-    @jwt_required()
-    def delete_wishlist(wishlist_id):
-        """Delete a wishlist and all its items"""
-        try:
-            current_user_id = get_jwt_identity()
-
-            wishlist = Wishlist.query.filter_by(id=wishlist_id, user_id=current_user_id).first()
-            if not wishlist:
-                return jsonify({'error': 'Wishlist not found'}), 404
-
-            db.session.delete(wishlist)
-            db.session.commit()
-
-            return jsonify({'success': True, 'message': 'Wishlist deleted'})
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'error': str(e)}), 500
-
-    # Update Wishlist Item (target price)
-    @app.route('/api/wishlists/items/<int:item_id>', methods=['PUT'])
-    @jwt_required()
-    def update_wishlist_item(item_id):
-        """Update target price for a wishlist item"""
-        try:
-            current_user_id = get_jwt_identity()
-            data = request.get_json()
-
-            item = WishlistItem.query.get(item_id)
-            if not item:
-                return jsonify({'error': 'Item not found'}), 404
-
-            # Verify ownership through wishlist
-            wishlist = Wishlist.query.filter_by(id=item.wishlist_id, user_id=current_user_id).first()
-            if not wishlist:
-                return jsonify({'error': 'Access denied'}), 403
-
-            target_price = data.get('target_price')
-            item.target_price = float(target_price) if target_price else None
-            db.session.commit()
-
-            return jsonify({'success': True, 'message': 'Target price updated', 'target_price': item.target_price})
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'error': str(e)}), 500
-
-    # Delete Wishlist Item
-    @app.route('/api/wishlists/items/<int:item_id>', methods=['DELETE'])
-    @jwt_required()
-    def delete_wishlist_item(item_id):
-        """Remove an item from a wishlist"""
-        try:
-            current_user_id = get_jwt_identity()
-
-            item = WishlistItem.query.get(item_id)
-            if not item:
-                return jsonify({'error': 'Item not found'}), 404
-
-            wishlist = Wishlist.query.filter_by(id=item.wishlist_id, user_id=current_user_id).first()
-            if not wishlist:
-                return jsonify({'error': 'Access denied'}), 403
-
-            db.session.delete(item)
-            db.session.commit()
-
-            return jsonify({'success': True, 'message': 'Item removed from wishlist'})
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'error': str(e)}), 500
-
     # Get Wishlist Items
     @app.route('/api/wishlists/<int:wishlist_id>/items', methods=['GET'])
     @jwt_required()
     def get_wishlist_items(wishlist_id):
         """Get all items in a wishlist"""
         try:
-            current_user_id = get_jwt_identity()
+            current_user_id = int(get_jwt_identity())
             
             # Verify ownership
             wishlist = Wishlist.query.filter_by(id=wishlist_id, user_id=current_user_id).first()
@@ -690,7 +582,7 @@ def create_app():
     def update_prices():
         """Update prices for tracked products"""
         try:
-            current_user_id = get_jwt_identity()
+            current_user_id = int(get_jwt_identity())
             
             # Get user's wishlist items
             wishlists = Wishlist.query.filter_by(user_id=current_user_id).all()
@@ -757,7 +649,7 @@ def create_app():
     def get_price_alerts():
         """Get all price alerts for current user"""
         try:
-            current_user_id = get_jwt_identity()
+            current_user_id = int(get_jwt_identity())
             
             alerts = []
             
@@ -819,7 +711,7 @@ def create_app():
     def update_profile():
         """Update user profile"""
         try:
-            current_user_id = get_jwt_identity()
+            current_user_id = int(get_jwt_identity())
             data = request.get_json()
             
             user = User.query.get(current_user_id)
@@ -874,7 +766,7 @@ def create_app():
     def get_dashboard_stats():
         """Get dashboard statistics"""
         try:
-            current_user_id = get_jwt_identity()
+            current_user_id = int(get_jwt_identity())
             
             # Get wishlist count
             wishlist_count = Wishlist.query.filter_by(user_id=current_user_id).count()
@@ -901,8 +793,19 @@ def create_app():
                             if latest_price and latest_price.price <= item.target_price:
                                 alerts_count += 1
             
-            # Calculate total savings (demo - would need more complex logic)
-            total_savings = random.randint(500, 5000)
+            # Calculate real total savings from wishlists
+            total_savings = 0
+            for wishlist in wishlists:
+                items = WishlistItem.query.filter_by(wishlist_id=wishlist.id).all()
+                for item in items:
+                    if item.target_price:
+                        product = Product.query.get(item.product_id)
+                        if product:
+                            latest_price = PriceHistory.query.filter_by(
+                                product_id=product.id
+                            ).order_by(PriceHistory.timestamp.desc()).first()
+                            if latest_price and item.target_price > latest_price.price:
+                                total_savings += round(item.target_price - latest_price.price, 2)
             
             return jsonify({
                 'success': True,
@@ -964,7 +867,7 @@ def create_app():
         logger.error(f"Unhandled exception: {e}", exc_info=True)
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
-            # Log application startup
+    # Log application startup
     @app.before_request
     def log_startup():
         if not hasattr(app, 'startup_logged'):

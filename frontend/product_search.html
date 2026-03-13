@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- In your HTML files -->
-<link rel="stylesheet" href="../styles/main.css">
-<link rel="stylesheet" href="../styles/responsive.css">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/responsive.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Products - PriceTracker</title>
@@ -516,7 +515,7 @@
                                     <i class="fas fa-heart mr-1"></i> Save
                                 </button>
                             ` : `
-                                <button onclick="addToWishlist('${encodeURIComponent(product.product_url)}', '${product.name.replace(/'/g, "\\'")}')" 
+                                <button onclick="addToWishlist(${products.indexOf(product)})" 
                                         class="flex-1 bg-red-50 text-red-600 py-2 rounded-lg hover:bg-red-100 transition">
                                     <i class="fas fa-heart mr-1"></i> Wishlist
                                 </button>
@@ -561,34 +560,37 @@
             }
         }
 
-        async function addToWishlist(productUrl, productName) {
+        async function addToWishlist(productIndex) {
             const isGuest = localStorage.getItem('is_guest') === 'true';
-            if (isGuest) {
-                showSignInPrompt();
+            if (isGuest) { showSignInPrompt(); return; }
+
+            const product = currentProducts[productIndex];
+            if (!product) return;
+
+            const targetPrice = prompt(`Set a target price for:\n"${product.name}"\n\nCurrent price: ₹${product.price}\n(Leave blank to skip)`, '');
+            if (targetPrice === null) return;
+
+            if (targetPrice && isNaN(targetPrice)) {
+                alert('Please enter a valid number for target price.');
                 return;
             }
-            
-            const targetPrice = prompt(`Set target price for ${productName} (optional):`, '');
-            
-            if (targetPrice === null) return; // User cancelled
-            
+
             showLoading(true, 'Adding to wishlist...');
-            
+
             try {
-                // First, check if product exists in our system
                 const productData = {
-                    product_url: decodeURIComponent(productUrl),
-                    name: productName,
+                    product_url: product.product_url,
+                    name: product.name,
+                    image_url: product.image_url || '',
+                    category: product.website || 'general',
                     target_price: targetPrice ? parseFloat(targetPrice) : null
                 };
-                
-                // You would need to implement this endpoint
+
                 const result = await makeApiRequest('/track-product', 'POST', productData, true);
-                
                 showLoading(false);
-                
+
                 if (result.ok) {
-                    alert('Product added to wishlist successfully!');
+                    alert(`✅ "${product.name}" added to wishlist!${targetPrice ? `\nPrice alert set for ₹${targetPrice}` : ''}`);
                 } else {
                     alert('Failed to add to wishlist: ' + (result.data?.error || 'Unknown error'));
                 }
@@ -600,7 +602,14 @@
 
         function addToWishlistFromModal() {
             if (!selectedProduct) return;
-            addToWishlist(selectedProduct.product_url, selectedProduct.name);
+            const idx = currentProducts.indexOf(selectedProduct);
+            if (idx !== -1) {
+                addToWishlist(idx);
+            } else {
+                // product came from URL param, push it temporarily
+                currentProducts.push(selectedProduct);
+                addToWishlist(currentProducts.length - 1);
+            }
         }
 
         async function trackProduct() {
