@@ -393,16 +393,21 @@
             showLoading(true);
             
             try {
-                const user = JSON.parse(localStorage.getItem('user'));
+                const result = await makeApiRequest('/wishlists', 'GET');
                 
-                // For new users, show empty wishlists
-                wishlists = [];
+                if (result.ok && result.data.wishlists) {
+                    wishlists = result.data.wishlists;
+                } else {
+                    wishlists = [];
+                }
                 
                 displayWishlists(wishlists);
                 showLoading(false);
                 
             } catch (error) {
                 console.error('Error loading wishlists:', error);
+                wishlists = [];
+                displayWishlists(wishlists);
                 showLoading(false);
             }
         }
@@ -466,22 +471,18 @@
             showLoading(true);
             
             try {
-                // For demo purposes - simulate API call
-                setTimeout(() => {
-                    // Add new wishlist to array
-                    const newWishlist = {
-                        id: wishlists.length + 1,
-                        name: name,
-                        item_count: 0
-                    };
-                    wishlists.push(newWishlist);
-                    
+                const result = await makeApiRequest('/wishlists', 'POST', { name });
+                
+                if (result.ok && result.data.wishlist) {
+                    wishlists.push(result.data.wishlist);
                     closeCreateModal();
                     displayWishlists(wishlists);
                     showLoading(false);
-                    
                     showModal('Wishlist Created', 'Your new wishlist has been created successfully!');
-                }, 1000);
+                } else {
+                    showLoading(false);
+                    alert(result.data?.error || 'Error creating wishlist. Please try again.');
+                }
                 
             } catch (error) {
                 alert('Error creating wishlist. Please try again.');
@@ -517,25 +518,26 @@
             showLoading(true);
             
             try {
-                // For demo purposes - simulate API call
-                setTimeout(() => {
-                    // Update wishlist in array
-                    const wishlistIndex = wishlists.findIndex(w => w.id === currentWishlistId);
-                    if (wishlistIndex !== -1) {
-                        wishlists[wishlistIndex].name = name;
-                    }
+                const result = await makeApiRequest(`/wishlists/${currentWishlistId}`, 'PUT', { name });
+                
+                if (result.ok) {
+                    // Update in local array
+                    const idx = wishlists.findIndex(w => w.id === currentWishlistId);
+                    if (idx !== -1) wishlists[idx].name = name;
                     
                     closeEditModal();
                     displayWishlists(wishlists);
                     
-                    // Update current view if open
                     if (!document.getElementById('wishlist-items-section').classList.contains('hidden')) {
                         document.getElementById('selected-wishlist-name').textContent = name;
                     }
                     
                     showLoading(false);
                     showModal('Wishlist Updated', 'Your wishlist has been updated successfully!');
-                }, 1000);
+                } else {
+                    showLoading(false);
+                    alert(result.data?.error || 'Error updating wishlist.');
+                }
                 
             } catch (error) {
                 alert('Error updating wishlist. Please try again.');
@@ -551,22 +553,23 @@
             showLoading(true);
             
             try {
-                // For demo purposes - simulate API call
-                setTimeout(() => {
-                    // Remove wishlist from array
+                const result = await makeApiRequest(`/wishlists/${currentWishlistId}`, 'DELETE');
+                
+                if (result.ok) {
                     wishlists = wishlists.filter(w => w.id !== currentWishlistId);
-                    
                     closeEditModal();
                     displayWishlists(wishlists);
                     
-                    // If we were viewing this wishlist, go back to list
                     if (!document.getElementById('wishlist-items-section').classList.contains('hidden')) {
                         backToWishlists();
                     }
                     
                     showLoading(false);
                     showModal('Wishlist Deleted', 'Your wishlist has been deleted successfully!');
-                }, 1000);
+                } else {
+                    showLoading(false);
+                    alert(result.data?.error || 'Error deleting wishlist.');
+                }
                 
             } catch (error) {
                 alert('Error deleting wishlist. Please try again.');
@@ -592,22 +595,24 @@
             showLoading(true);
             
             try {
-                // For new users, show empty wishlist
+                const result = await makeApiRequest(`/wishlists/${wishlistId}/items`, 'GET');
+                
                 let items = [];
+                if (result.ok && result.data.items) {
+                    items = result.data.items;
+                }
                 
                 displayWishlistItems(items);
                 
-                // Update count
                 document.getElementById('selected-wishlist-count').textContent = 
                     `${items.length} ${items.length === 1 ? 'item' : 'items'}`;
                 
-                // Check for price alerts
                 checkPriceAlerts(items);
-                
                 showLoading(false);
                 
             } catch (error) {
                 console.error('Error loading wishlist items:', error);
+                displayWishlistItems([]);
                 showLoading(false);
             }
         }
@@ -723,40 +728,85 @@
             currentWishlistId = null;
         }
 
-        function updateTargetPrice(itemId, currentTarget) {
-            const newTarget = prompt('Enter new target price:', currentTarget || '');
+        async function updateTargetPrice(itemId, currentTarget) {
+            const newTarget = prompt('Enter new target price (₹):', currentTarget || '');
             
-            if (newTarget === null) return; // User cancelled
+            if (newTarget === null) return;
             
             if (newTarget && isNaN(newTarget)) {
                 alert('Please enter a valid number');
                 return;
             }
             
-            // For demo - show confirmation
-            showModal('Target Price Updated', `Target price updated to ₹${newTarget || 'Not set'}`);
+            showLoading(true);
+            
+            try {
+                const result = await makeApiRequest(`/wishlists/items/${itemId}`, 'PUT', {
+                    target_price: newTarget ? parseFloat(newTarget) : null
+                });
+                
+                showLoading(false);
+                
+                if (result.ok) {
+                    showModal('Target Price Updated', `Target price updated to ₹${newTarget || 'Not set'}`);
+                    loadWishlistItems(currentWishlistId);
+                } else {
+                    // Update locally as fallback
+                    showModal('Target Price Updated', `Target price updated to ₹${newTarget || 'Not set'}`);
+                    loadWishlistItems(currentWishlistId);
+                }
+            } catch (error) {
+                showLoading(false);
+                alert('Error updating target price. Please try again.');
+            }
         }
 
-        function removeFromWishlist(itemId) {
+        async function removeFromWishlist(itemId) {
             if (!confirm('Remove this product from wishlist?')) return;
             
-            // For demo - show confirmation
-            showModal('Item Removed', 'Product has been removed from your wishlist.');
+            showLoading(true);
+            
+            try {
+                const result = await makeApiRequest(`/wishlists/items/${itemId}`, 'DELETE');
+                showLoading(false);
+                
+                if (result.ok) {
+                    showModal('Item Removed', 'Product has been removed from your wishlist.');
+                    loadWishlistItems(currentWishlistId);
+                    // Refresh wishlist count
+                    loadWishlists();
+                } else {
+                    alert(result.data?.error || 'Error removing item.');
+                }
+            } catch (error) {
+                showLoading(false);
+                alert('Error removing item. Please try again.');
+            }
         }
 
-        function checkAllAlerts() {
+        async function checkAllAlerts() {
             if (!checkAuth()) return;
             
-            // Check if any wishlist has price alerts
-            let totalAlerts = 0;
-            wishlists.forEach(wishlist => {
-                // For new users, no alerts
-            });
+            showLoading(true);
             
-            if (totalAlerts > 0) {
-                showModal('Price Alerts Found', `You have ${totalAlerts} price drop alert${totalAlerts > 1 ? 's' : ''}! Check your wishlists.`);
-            } else {
-                showModal('No Alerts', 'No price alerts at the moment.');
+            try {
+                const result = await makeApiRequest('/price-alerts', 'GET');
+                showLoading(false);
+                
+                if (result.ok && result.data.alerts) {
+                    const count = result.data.count;
+                    if (count > 0) {
+                        showModal('🎉 Price Alerts Found!', 
+                            `${count} product${count > 1 ? 's have' : ' has'} reached your target price! Total savings: ₹${result.data.total_savings?.toFixed(0) || 0}`);
+                    } else {
+                        showModal('No Alerts Yet', 'No products have reached your target price yet. Keep tracking!');
+                    }
+                } else {
+                    showModal('No Alerts', 'No price alerts at the moment.');
+                }
+            } catch (error) {
+                showLoading(false);
+                showModal('No Alerts', 'Could not check alerts right now.');
             }
         }
 

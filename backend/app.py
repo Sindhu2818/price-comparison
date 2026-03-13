@@ -488,6 +488,102 @@ def create_app():
             db.session.rollback()
             return jsonify({'error': str(e)}), 500
 
+    # Update Wishlist
+    @app.route('/api/wishlists/<int:wishlist_id>', methods=['PUT'])
+    @jwt_required()
+    def update_wishlist(wishlist_id):
+        """Rename a wishlist"""
+        try:
+            current_user_id = get_jwt_identity()
+            data = request.get_json()
+            name = (data.get('name') or '').strip()
+
+            if not name:
+                return jsonify({'error': 'Wishlist name is required'}), 400
+
+            wishlist = Wishlist.query.filter_by(id=wishlist_id, user_id=current_user_id).first()
+            if not wishlist:
+                return jsonify({'error': 'Wishlist not found'}), 404
+
+            wishlist.name = name
+            db.session.commit()
+
+            return jsonify({'success': True, 'message': 'Wishlist updated', 'wishlist': {'id': wishlist.id, 'name': wishlist.name}})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
+
+    # Delete Wishlist
+    @app.route('/api/wishlists/<int:wishlist_id>', methods=['DELETE'])
+    @jwt_required()
+    def delete_wishlist(wishlist_id):
+        """Delete a wishlist and all its items"""
+        try:
+            current_user_id = get_jwt_identity()
+
+            wishlist = Wishlist.query.filter_by(id=wishlist_id, user_id=current_user_id).first()
+            if not wishlist:
+                return jsonify({'error': 'Wishlist not found'}), 404
+
+            db.session.delete(wishlist)
+            db.session.commit()
+
+            return jsonify({'success': True, 'message': 'Wishlist deleted'})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
+
+    # Update Wishlist Item (target price)
+    @app.route('/api/wishlists/items/<int:item_id>', methods=['PUT'])
+    @jwt_required()
+    def update_wishlist_item(item_id):
+        """Update target price for a wishlist item"""
+        try:
+            current_user_id = get_jwt_identity()
+            data = request.get_json()
+
+            item = WishlistItem.query.get(item_id)
+            if not item:
+                return jsonify({'error': 'Item not found'}), 404
+
+            # Verify ownership through wishlist
+            wishlist = Wishlist.query.filter_by(id=item.wishlist_id, user_id=current_user_id).first()
+            if not wishlist:
+                return jsonify({'error': 'Access denied'}), 403
+
+            target_price = data.get('target_price')
+            item.target_price = float(target_price) if target_price else None
+            db.session.commit()
+
+            return jsonify({'success': True, 'message': 'Target price updated', 'target_price': item.target_price})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
+
+    # Delete Wishlist Item
+    @app.route('/api/wishlists/items/<int:item_id>', methods=['DELETE'])
+    @jwt_required()
+    def delete_wishlist_item(item_id):
+        """Remove an item from a wishlist"""
+        try:
+            current_user_id = get_jwt_identity()
+
+            item = WishlistItem.query.get(item_id)
+            if not item:
+                return jsonify({'error': 'Item not found'}), 404
+
+            wishlist = Wishlist.query.filter_by(id=item.wishlist_id, user_id=current_user_id).first()
+            if not wishlist:
+                return jsonify({'error': 'Access denied'}), 403
+
+            db.session.delete(item)
+            db.session.commit()
+
+            return jsonify({'success': True, 'message': 'Item removed from wishlist'})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
+
     # Get Wishlist Items
     @app.route('/api/wishlists/<int:wishlist_id>/items', methods=['GET'])
     @jwt_required()
