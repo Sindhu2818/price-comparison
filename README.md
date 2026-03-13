@@ -267,7 +267,7 @@ You can also register your own account from the login page.
 
 ## 👩‍💻 Developer
 
-**Raga Sindhu** — Hackathon Submission 2026
+**Raga Sindhu** 
 
 ---
 
